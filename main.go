@@ -445,6 +445,13 @@ func checkScore() {
 	fmt.Println(botCount)
 }
 
+func putNotification(note string, x uint8, y uint8) {
+	for _, i := range note {
+		world[convertToRealPosition(x, y)] = byte(i)
+		x++
+	}
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	lastDropTime = time.Now()
@@ -453,11 +460,6 @@ func main() {
 	fillWorld()
 	buildBorders()
 	buildHouse()
-	// world[convertToRealPosition(20, 2)] = movebleObject
-	// world[convertToRealPosition(20, 3)] = movebleObject
-	// world[convertToRealPosition(20, 4)] = movebleObject
-	// world[convertToRealPosition(20, 5)] = movebleObject
-	// world[convertToRealPosition(20, 6)] = movebleObject
 	currentStage = 0
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("File server request:", r.URL.Path)
@@ -465,11 +467,14 @@ func main() {
 	}))
 
 	http.HandleFunc("/loh", authenticate(handlePlayer()))
-
+	putNotification("| hello! u can move with 'wasd' |", 40, 16)
+	putNotification("| 'X' - stuff will drops |", 40, 18)
+	putNotification("| steal it and collect in your storage |", 40, 20)
+	putNotification("| u can throw stuff over yourself with 'p' |", 40, 22)
+	putNotification("| when you will be ready to play, just press 'r |", 40, 24)
 	port := "0.0.0.0:8080"
 	fmt.Println("Starting server on port", port)
 	go allReady()
-	// checkScore()
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		panic(err)
