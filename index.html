@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Текст с сервера</title>
+    <style>
+        /* Сохраняем пробелы и переносы строк */
+        #response {
+            white-space: pre-wrap; /* Сохраняет форматирование текста */
+            font-family: monospace; /* Делает текст более читаемым (опционально) */
+        }
+    </style>
+</head>
+<body>
+    <!-- Только текст будет отображаться здесь -->
+    <div id="response"></div>
+
+    <script>
+        // Функция для отправки запроса на сервер
+        async function fetchData(key) {
+            try {
+                const response = await fetch('http://localhost:8080/loh', {
+                    method: 'POST', // Используем POST-запрос
+                    headers: {
+                        'Content-Type': 'text/plain', // Указываем тип данных
+                    },
+                    body: key, // Передаём нажатую клавишу в теле запроса
+                });
+                if (!response.ok) {
+                    throw new Error(`Ошибка HTTP: ${response.status}`);
+                }
+                const data = await response.text(); // Сервер возвращает простой текст
+                return data;
+            } catch (error) {
+                console.error('Ошибка при получении данных:', error);
+                return `Ошибка: ${error.message}`;
+            }
+        }
+
+        // Функция для обновления содержимого страницы
+        async function updateResponse(key) {
+            const responseDiv = document.getElementById('response'); // Находим элемент для вывода
+            const data = await fetchData(key); // Получаем данные с сервера
+            responseDiv.textContent = data; // Отображаем текст как есть
+        }
+
+        // Обработчик нажатия клавиш
+        document.addEventListener('keydown', (event) => {
+            const key = event.key; // Получаем нажатую клавишу
+            updateResponse(key); // Отправляем её на сервер
+        });
+
+        // Устанавливаем интервал для постоянных запросов (например, каждые 100 мс)
+        setInterval(() => {
+            updateResponse(''); // Пустой запрос для обновления без нажатия клавиш
+        }, 100);
+
+        // Вызываем функцию сразу при загрузке страницы
+        updateResponse('');
+    </script>
+</body>
+</html>
