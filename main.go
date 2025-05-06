@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -13,27 +12,8 @@ type player struct {
 	xPosition uint8
 	yPosition uint8
 	name      byte
-	step      uint8
 	ready     uint8
 }
-
-const (
-	emptySpace      = ' '
-	wallObject      = '#'
-	movebleObject   = 'X'
-	preWallObject   = '0'
-	goodPlayer      = '@'
-	badPlayer       = '&'
-	dropYummyTime   = 3
-	dropWallTime    = 1
-	LEFT            = 4
-	RIGHT           = 6
-	UP              = 8
-	DOWN            = 2
-	maxPlayersCount = 5
-	fistStageTime   = 10
-	mainStageTIme   = 20
-)
 
 var (
 	currentStage       uint8
@@ -47,33 +27,33 @@ var (
 )
 
 func tryMoveObject(currentPlayer *player, dir uint8, object byte) uint8 {
-	x, y, step := currentPlayer.xPosition, currentPlayer.yPosition, currentPlayer.step
+	x, y := currentPlayer.xPosition, currentPlayer.yPosition
 
 	switch dir {
-	case LEFT:
-		if world[convertToRealPosition(x-step, y)] != emptySpace {
-			currentPlayer.xPosition += step
+	case Left:
+		if world[convertToRealPosition(x-1, y)] != EmptySpace {
+			currentPlayer.xPosition += 1
 			return 1
 		}
-		world[convertToRealPosition(x-step, y)] = object
-	case RIGHT:
-		if world[convertToRealPosition(x+step, y)] != emptySpace {
-			currentPlayer.xPosition -= step
+		world[convertToRealPosition(x-1, y)] = object
+	case Right:
+		if world[convertToRealPosition(x+1, y)] != EmptySpace {
+			currentPlayer.xPosition -= 1
 			return 1
 		}
-		world[convertToRealPosition(x+step, y)] = object
-	case UP:
-		if world[convertToRealPosition(x, y-step)] != emptySpace {
-			currentPlayer.yPosition += step
+		world[convertToRealPosition(x+1, y)] = object
+	case Up:
+		if world[convertToRealPosition(x, y-1)] != EmptySpace {
+			currentPlayer.yPosition += 1
 			return 1
 		}
-		world[convertToRealPosition(x, y-step)] = object
-	case DOWN:
-		if world[convertToRealPosition(x, y+step)] != emptySpace {
-			currentPlayer.yPosition -= step
+		world[convertToRealPosition(x, y-1)] = object
+	case Down:
+		if world[convertToRealPosition(x, y+1)] != EmptySpace {
+			currentPlayer.yPosition -= 1
 			return 1
 		}
-		world[convertToRealPosition(x, y+step)] = object
+		world[convertToRealPosition(x, y+1)] = object
 	}
 	return 0
 }
@@ -84,86 +64,59 @@ func throwOver(p *player) {
 	objectOnTheUp := world[convertToRealPosition(p.xPosition, p.yPosition-1)]
 	objectOnTheDown := world[convertToRealPosition(p.xPosition, p.yPosition+1)]
 
-	if objectOnTheRight == movebleObject {
-		if objectOnTheLeft == emptySpace {
+	if objectOnTheRight == MovebleObject {
+		if objectOnTheLeft == EmptySpace {
 			world[convertToRealPosition(p.xPosition-1, p.yPosition)] = objectOnTheRight
-			world[convertToRealPosition(p.xPosition+1, p.yPosition)] = emptySpace
+			world[convertToRealPosition(p.xPosition+1, p.yPosition)] = EmptySpace
 			return
 		}
 	}
-	if objectOnTheLeft == movebleObject {
-		if objectOnTheRight == emptySpace {
+	if objectOnTheLeft == MovebleObject {
+		if objectOnTheRight == EmptySpace {
 			world[convertToRealPosition(p.xPosition+1, p.yPosition)] = objectOnTheLeft
-			world[convertToRealPosition(p.xPosition-1, p.yPosition)] = emptySpace
+			world[convertToRealPosition(p.xPosition-1, p.yPosition)] = EmptySpace
 			return
 		}
 	}
-	if objectOnTheUp == movebleObject {
-		if objectOnTheDown == emptySpace {
+	if objectOnTheUp == MovebleObject {
+		if objectOnTheDown == EmptySpace {
 			world[convertToRealPosition(p.xPosition, p.yPosition+1)] = objectOnTheUp
-			world[convertToRealPosition(p.xPosition, p.yPosition-1)] = emptySpace
+			world[convertToRealPosition(p.xPosition, p.yPosition-1)] = EmptySpace
 			return
 		}
 	}
-	if objectOnTheDown == movebleObject {
-		if objectOnTheUp == emptySpace {
+	if objectOnTheDown == MovebleObject {
+		if objectOnTheUp == EmptySpace {
 			world[convertToRealPosition(p.xPosition, p.yPosition-1)] = objectOnTheDown
-			world[convertToRealPosition(p.xPosition, p.yPosition+1)] = emptySpace
+			world[convertToRealPosition(p.xPosition, p.yPosition+1)] = EmptySpace
 			return
 		}
 	}
 }
 
-func moveLeft(p *player) uint8 {
-	p.xPosition -= p.step
-	nextSpace := world[convertToRealPosition(p.xPosition, p.yPosition)]
-	switch nextSpace {
-	case emptySpace:
-	case movebleObject:
-		return tryMoveObject(p, LEFT, movebleObject)
-	default:
-		p.xPosition += p.step
-		return 1
+func movePlayer(x uint8, y uint8, dir uint8, p *player) uint8 {
+	switch dir {
+	case 1:
+		p.xPosition += x
+		p.yPosition += y
+	case 2:
+		p.xPosition -= x
+		p.yPosition -= y
 	}
-	return 0
-}
-func moveRight(p *player) uint8 {
-	p.xPosition += p.step
 	nextSpace := world[convertToRealPosition(p.xPosition, p.yPosition)]
 	switch nextSpace {
-	case emptySpace:
-	case movebleObject:
-		return tryMoveObject(p, RIGHT, movebleObject)
+	case EmptySpace:
+	case MovebleObject:
+		return tryMoveObject(p, Left, MovebleObject)
 	default:
-		p.xPosition -= p.step
-		return 1
-	}
-	return 0
-}
-
-func moveUp(p *player) uint8 {
-	p.yPosition -= p.step
-	nextSpace := world[convertToRealPosition(p.xPosition, p.yPosition)]
-	switch nextSpace {
-	case emptySpace:
-	case movebleObject:
-		return tryMoveObject(p, UP, movebleObject)
-	default:
-		p.yPosition += p.step
-		return 1
-	}
-	return 0
-}
-
-func moveDown(p *player) uint8 {
-	p.yPosition += p.step
-	nextSpace := world[convertToRealPosition(p.xPosition, p.yPosition)]
-	switch nextSpace {
-	case emptySpace:
-	case movebleObject:
-		return tryMoveObject(p, DOWN, movebleObject)
-	default:
-		p.yPosition -= p.step
+		switch dir {
+		case 1:
+			p.xPosition -= x
+			p.yPosition -= y
+		case 2:
+			p.xPosition += x
+			p.yPosition += y
+		}
 		return 1
 	}
 	return 0
@@ -172,15 +125,22 @@ func moveDown(p *player) uint8 {
 func handlePlayerMovement(key byte, p *player) {
 	prevPss := [2]uint8{p.xPosition, p.yPosition}
 	var err uint8 = 0
+	var x uint8 = 0
+	var y uint8 = 0
+	var d uint8 = 0
 	switch key {
 	case 'a':
-		err = moveLeft(p)
+		x = 1
+		d = 2
 	case 'd':
-		err = moveRight(p)
+		x = 1
+		d = 1
 	case 'w':
-		err = moveUp(p)
+		y = 1
+		d = 2
 	case 's':
-		err = moveDown(p)
+		y = 1
+		d = 1
 	case 'p':
 		throwOver(p)
 	case 'r':
@@ -191,6 +151,8 @@ func handlePlayerMovement(key byte, p *player) {
 	default:
 		return
 	}
+
+	err = movePlayer(x, y, d, p)
 	if err != 0 {
 		return
 	}
@@ -208,17 +170,16 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 		playersMu.Lock()
 		_, exists := players[userID]
 		if !exists {
-			if playersCount < maxPlayersCount {
-				if lastPlayer == goodPlayer {
-					lastPlayer = badPlayer
+			if playersCount < MaxPlayersCount {
+				if lastPlayer == GoodPlayer {
+					lastPlayer = BadPlayer
 				} else {
-					lastPlayer = goodPlayer
+					lastPlayer = GoodPlayer
 				}
 				players[userID] = &player{
 					xPosition: 10,
 					yPosition: 10,
 					name:      lastPlayer,
-					step:      1,
 					ready:     0,
 				}
 				playersCount++
@@ -230,32 +191,6 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 		r = r.WithContext(r.Context())
 		next.ServeHTTP(w, r)
 	}
-}
-
-func convertToRealPosition(x uint8, y uint8) uint16 {
-	if x == 0 && y == 0 {
-		return 0
-	}
-	return uint16((102 * uint16(y)) - 102 + uint16(x)) // +2 for '\n'
-}
-
-func render() string {
-
-	for _, value := range forgottenPositions {
-		world[convertToRealPosition(value[0], value[1])] = emptySpace
-	}
-	for _, value := range players {
-		if value.ready == 1 {
-			world[convertToRealPosition(value.xPosition, value.yPosition)] = 'R'
-		} else {
-			world[convertToRealPosition(value.xPosition, value.yPosition)] = value.name
-		}
-
-	}
-
-	forgottenPositions = forgottenPositions[:0]
-
-	return string(world)
 }
 
 func handlePlayer() http.HandlerFunc {
@@ -289,46 +224,13 @@ func handlePlayer() http.HandlerFunc {
 
 }
 
-func fillWorld() {
-	for y := 0; y < 41; y++ {
-		for x := 0; x < 101; x++ {
-			world = append(world, emptySpace)
-		}
-		world = append(world, '\n')
-	}
-}
-
-func buildBorders() {
-	for i := 2; i < 41; i++ {
-		world[convertToRealPosition(0, uint8(i))] = '#'
-	}
-
-	for i := 2; i < 41; i++ {
-		world[convertToRealPosition(100, uint8(i))] = '#'
-	}
-
-	for i := 0; i < 101; i++ {
-		world[convertToRealPosition(uint8(i), 1)] = '#'
-	}
-
-	for i := 0; i < 101; i++ {
-		world[convertToRealPosition(uint8(i), 41)] = '#'
-	}
-
-}
-
-func returnRandomNumber(min int, max int) uint8 {
-	randomNumber := rand.Intn(max-min) + min
-	return uint8(randomNumber)
-}
-
 func dropMovebaleObject() {
 	x := returnRandomNumber(2, 100)
 	y := returnRandomNumber(2, 40)
-	if world[convertToRealPosition(x, y)] != emptySpace {
+	if world[convertToRealPosition(x, y)] != EmptySpace {
 		dropMovebaleObject()
 	} else {
-		world[convertToRealPosition(x, y)] = movebleObject
+		world[convertToRealPosition(x, y)] = MovebleObject
 	}
 }
 
@@ -338,11 +240,11 @@ func drop() {
 		switch currentStage {
 		case 1:
 			currentTime := time.Now()
-			if currentTime.Sub(lastDropTime) > dropYummyTime*time.Second {
+			if currentTime.Sub(lastDropTime) > DropYummyTime*time.Second {
 				dropMovebaleObject()
 				lastDropTime = currentTime
-				commonTime += dropYummyTime
-				if commonTime >= mainStageTIme {
+				commonTime += DropYummyTime
+				if commonTime >= MainStageTIme {
 					currentStage = 2
 					commonTime = 0
 					fmt.Println("the main stage is over!")
@@ -395,67 +297,10 @@ func allReady() {
 	currentStage = 1
 }
 
-func buildHouse() {
-
-	for i := 31; i < 41; i++ {
-		if i == 36 {
-			world[convertToRealPosition(80, uint8(i))] = emptySpace
-		} else {
-			world[convertToRealPosition(80, uint8(i))] = wallObject
-		}
-	}
-
-	for i := 80; i < 100; i++ {
-		world[convertToRealPosition(uint8(i), 31)] = wallObject
-	}
-
-	for i := 1; i < 12; i++ {
-		if i == 6 {
-			world[convertToRealPosition(21, uint8(i))] = emptySpace
-		} else {
-			world[convertToRealPosition(21, uint8(i))] = wallObject
-		}
-
-	}
-
-	for i := 1; i < 21; i++ {
-		world[convertToRealPosition(uint8(i), 11)] = wallObject
-	}
-
-}
-
-func checkScore() {
-	topCount := 0
-	botCount := 0
-	for y := 2; y < 12; y++ {
-		for x := 2; x < 20; x++ {
-			if world[convertToRealPosition(uint8(x), uint8(y))] == movebleObject {
-				topCount++
-			}
-		}
-	}
-	for y := 32; y < 41; y++ {
-		for x := 80; x < 100; x++ {
-			if world[convertToRealPosition(uint8(x), uint8(y))] == movebleObject {
-				botCount++
-			}
-		}
-	}
-	fmt.Println(topCount)
-	fmt.Println(botCount)
-}
-
-func putNotification(note string, x uint8, y uint8) {
-	for _, i := range note {
-		world[convertToRealPosition(x, y)] = byte(i)
-		x++
-	}
-}
-
 func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	lastDropTime = time.Now()
-	lastPlayer = goodPlayer
+	lastPlayer = GoodPlayer
 	playersCount = 0
 	fillWorld()
 	buildBorders()
