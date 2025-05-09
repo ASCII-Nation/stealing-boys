@@ -54,19 +54,25 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 		playersMu.Lock()
 		_, exists := players[userID]
 		if !exists {
-			if playersCount < MaxPlayersCount {
+			xx := 0
+			yy := 0
+			if playersCount < MaxPlayersCount && currentStage == PrepareStage {
 				if lastPlayer == GoodPlayer {
 					lastPlayer = BadPlayer
+					xx = 90
+					yy = 35
 				} else {
 					lastPlayer = GoodPlayer
+					xx = 10
+					yy = 10
 				}
 				players[userID] = &player{
-					xPosition: 10,
-					yPosition: 10,
+					xPosition: int16(xx),
+					yPosition: int16(yy),
 					name:      lastPlayer,
 					ready:     false,
 				}
-				world[convertToRealPosition(10, 10)] = lastPlayer
+				world[convertToRealPosition(int16(xx), int16(yy))] = lastPlayer
 				playersCount++
 			}
 
@@ -78,6 +84,21 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func deletePlayer() {
+	ticker := time.NewTicker(1 * time.Second)
+	for range ticker.C {
+		playersMu.Lock()
+		for id, p := range players {
+			if time.Since(p.lastSeen) > 10*time.Second {
+				delete(players, id)
+				playersCount--
+				world[convertToRealPosition(p.xPosition, p.yPosition)] = EmptySpace
+			}
+		}
+		playersMu.Unlock()
+	}
+}
+
 func handlePlayer() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +107,7 @@ func handlePlayer() http.HandlerFunc {
 		playersMu.Lock()
 		p, exists := players[userID]
 		playersMu.Unlock()
+		p.lastSeen = time.Now()
 		if !exists {
 			http.Error(w, "User not found", http.StatusNotFound)
 			return
@@ -110,28 +132,27 @@ func handlePlayer() http.HandlerFunc {
 }
 
 func main() {
-	fs := http.FileServer(http.Dir("./static"))
+
 	lastDropTime = time.Now()
 	lastPlayer = GoodPlayer
 	playersCount = 0
 	clearWorld()
 	currentStage = 0
+	educationNotification()
+
+	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("File server request:", r.URL.Path)
 		fs.ServeHTTP(w, r)
 	}))
-
 	http.HandleFunc("/loh", authenticate(handlePlayer()))
-	putNotification("| hello! u can move with 'wasd' |", 40, 16)
-	putNotification("| 'X' - stuff will drops |", 40, 18)
-	putNotification("| steal it and collect in your storage |", 40, 20)
-	putNotification("| u can throw stuff over yourself with 'p' |", 40, 22)
-	putNotification("| when you will be ready to play, just press 'r |", 40, 24)
 	port := "0.0.0.0:8080"
 	fmt.Println("Starting server on port", port)
+
 	go allReady()
+	go deletePlayer()
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		panic(err)
 	}
+
 }

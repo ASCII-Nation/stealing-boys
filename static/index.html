@@ -3,70 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>|fight club|</title>
+    <title>Текст с сервера</title>
     <style>
-        /* Сохраняем пробелы и переносы строк */
         #response {
-            white-space: pre-wrap; /* Сохраняет форматирование текста */
-            font-family: monospace; /* Делает текст более читаемым (опционально) */
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        #setup {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <!-- Только текст будет отображаться здесь -->
-    <div id="response">Загрузка...</div>
+    <div id="setup">
+        <label for="userID">YOUR NAME: </label>
+        <input type="text" id="userID" placeholder="Enter your name" />
+        <button onclick="startSession()">Connect</button>
+    </div>
+
+    <div id="response"></div>
 
     <script>
-        // Генерация уникального идентификатора пользователя
-        function generateUserID() {
-            return 'user_' + Math.random().toString(36).substr(2, 9); // Простая генерация ID
-        }
+        let userID = null;
 
-        // Уникальный ID пользователя
-        const userID = generateUserID();
-
-        // Функция для отправки запроса на сервер
         async function fetchData(key) {
+            if (!userID) return "here is no names!";
+
             try {
                 const response = await fetch('/loh', {
-                    method: 'POST', // Используем POST-запрос
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain', // Указываем тип данных
-                        'X-User-ID': userID, // Добавляем заголовок с ID пользователя
+                        'Content-Type': 'text/plain',
+                        'X-User-ID': userID
                     },
-                    body: key, // Передаём нажатую клавишу в теле запроса
+                    body: key
                 });
                 if (!response.ok) {
-                    throw new Error(`Ошибка HTTP: ${response.status}`);
+                    throw new Error(`HTTP error: ${response.status}`);
                 }
-                const data = await response.text(); // Сервер возвращает простой текст
-                return data;
+                return await response.text();
             } catch (error) {
-                console.error('Ошибка при получении данных:', error);
-                return `Ошибка: ${error.message}`;
+                console.error('Error data receiving: ', error);
+                return `Error: ${error.message}`;
             }
         }
 
-        // Функция для обновления содержимого страницы
         async function updateResponse(key) {
-            const responseDiv = document.getElementById('response'); // Находим элемент для вывода
-            const data = await fetchData(key); // Получаем данные с сервера
-            responseDiv.textContent = data; // Отображаем текст как есть
+            const responseDiv = document.getElementById('response');
+            const data = await fetchData(key);
+            responseDiv.textContent = data;
         }
 
-        // Обработчик нажатия клавиш
         document.addEventListener('keydown', (event) => {
-            const key = event.key; // Получаем нажатую клавишу
-            updateResponse(key); // Отправляем её на сервер
+            if (userID) updateResponse(event.key);
         });
 
-        // Устанавливаем интервал для постоянных запросов (например, каждые 100 мс)
-        setInterval(() => {
-            updateResponse(''); // Пустой запрос для обновления без нажатия клавиш
-        }, 20);
-
-        // Вызываем функцию сразу при загрузке страницы
-        updateResponse('');
+        function startSession() {
+            const input = document.getElementById('userID');
+            const value = input.value.trim();
+            if (value) {
+                userID = value;
+                document.getElementById('setup').style.display = 'none';
+                updateResponse('');
+                setInterval(() => updateResponse(''), 20);
+            } else {
+                alert("Enter correct name pls");
+            }
+        }
     </script>
 </body>
 </html>

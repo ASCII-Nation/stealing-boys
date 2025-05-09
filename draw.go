@@ -87,3 +87,11 @@ func clearWorld() {
 	}
 	playersMu.Unlock()
 }
+
+func educationNotification() {
+	putNotification("| hello! u can move with 'wasd' |", 40, 16)
+	putNotification("| 'X' - stuff will drops |", 40, 18)
+	putNotification("| steal it and collect in your storage |", 40, 20)
+	putNotification("| u can throw stuff over yourself with 'p' |", 40, 22)
+	putNotification("| when you will be ready to play, just press 'r |", 40, 24)
+}

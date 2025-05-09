@@ -33,7 +33,7 @@ func stageController() {
 				dropMovebaleObject()
 				lastDropTime = currentTime
 				commonTime += DropYummyTime
-				if commonTime >= MainStageTIme {
+				if commonTime >= MainStageTime {
 					currentStage = FinishStage
 					commonTime = 0
 				}

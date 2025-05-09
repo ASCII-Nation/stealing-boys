@@ -12,14 +12,13 @@ const (
 	PreWallObject   = '0'
 	GoodPlayer      = '@'
 	BadPlayer       = '&'
-	DropYummyTime   = 3
+	DropYummyTime   = 7
 	Left            = 4
 	Right           = 6
 	Up              = 8
 	Down            = 2
 	MaxPlayersCount = 5
-	FistStageTime   = 10
-	MainStageTIme   = 20
+	MainStageTime   = 100
 	PrepareStage    = 0
 	MainStage       = 1
 	FinishStage     = 2
@@ -42,4 +41,5 @@ type player struct {
 	yPosition int16
 	name      byte
 	ready     bool
+	lastSeen  time.Time
 }
