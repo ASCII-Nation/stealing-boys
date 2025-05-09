@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
-func returnRandomNumber(min int, max int) uint8 {
+func returnRandomNumber(min int, max int) int16 {
 	randomNumber := rand.Intn(max-min) + min
-	return uint8(randomNumber)
+	return int16(randomNumber)
 }
 
 func checkScore() {
@@ -15,23 +14,28 @@ func checkScore() {
 	botCount := 0
 	for y := 2; y < 12; y++ {
 		for x := 2; x < 20; x++ {
-			if world[convertToRealPosition(uint8(x), uint8(y))] == MovebleObject {
+			if world[convertToRealPosition(int16(x), int16(y))] == MovebleObject {
 				topCount++
 			}
 		}
 	}
 	for y := 32; y < 41; y++ {
 		for x := 80; x < 100; x++ {
-			if world[convertToRealPosition(uint8(x), uint8(y))] == MovebleObject {
+			if world[convertToRealPosition(int16(x), int16(y))] == MovebleObject {
 				botCount++
 			}
 		}
 	}
-	fmt.Println(topCount)
-	fmt.Println(botCount)
+	if topCount > botCount {
+		putNotification("top team win!", 50, 20)
+	} else if botCount > topCount {
+		putNotification("bot team win!", 50, 20)
+	} else {
+		putNotification("it's a draw!", 50, 20)
+	}
 }
 
-func convertToRealPosition(x uint8, y uint8) uint16 {
+func convertToRealPosition(x int16, y int16) uint16 {
 	if x == 0 && y == 0 {
 		return 0
 	}
