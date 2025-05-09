@@ -27,8 +27,8 @@ var (
 	lastDropTime       time.Time
 	world              []byte
 	forgottenPositions = make([][2]int16, 0, 10)
-	players            = make(map[string]*player) // Пул игроков
-	playersMu          sync.Mutex                 // Мьютекс для безопасного доступа к пулу
+	players            = make(map[string]*player)
+	playersMu          sync.Mutex
 )
 
 type player struct {
