@@ -9,14 +9,9 @@ const (
 	EmptySpace      = ' '
 	WallObject      = '#'
 	MovebleObject   = 'X'
-	PreWallObject   = '0'
 	GoodPlayer      = '@'
 	BadPlayer       = '&'
 	DropYummyTime   = 7
-	Left            = 4
-	Right           = 6
-	Up              = 8
-	Down            = 2
 	MaxPlayersCount = 5
 	MainStageTime   = 100
 	PrepareStage    = 0
