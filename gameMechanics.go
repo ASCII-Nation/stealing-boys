@@ -14,7 +14,7 @@ func allReady() {
 
 	for _, value := range players {
 		value.ready = false
-		world[convertToRealPosition(value.xPosition, value.yPosition)] = value.name // TODO: need to replace on better solution!
+		world[convertToRealPosition(value.xPosition, value.yPosition)] = value.name
 	}
 	readyCount = 0
 	currentStage = MainStage
