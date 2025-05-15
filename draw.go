@@ -11,7 +11,12 @@ func buildHouse() {
 	}
 
 	for i := 80; i < 100; i++ {
-		world[convertToRealPosition(int16(i), 31)] = WallObject
+		if i == 85 {
+			world[convertToRealPosition(int16(i), 31)] = EmptySpace
+		} else {
+			world[convertToRealPosition(int16(i), 31)] = WallObject
+		}
+
 	}
 
 	for i := 1; i < 12; i++ {
@@ -20,11 +25,14 @@ func buildHouse() {
 		} else {
 			world[convertToRealPosition(21, int16(i))] = WallObject
 		}
-
 	}
 
 	for i := 1; i < 21; i++ {
-		world[convertToRealPosition(int16(i), 11)] = WallObject
+		if i == 15 {
+			world[convertToRealPosition(int16(i), 11)] = EmptySpace
+		} else {
+			world[convertToRealPosition(int16(i), 11)] = WallObject
+		}
 	}
 
 }

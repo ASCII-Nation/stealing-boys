@@ -145,7 +145,7 @@ func main() {
 		fs.ServeHTTP(w, r)
 	}))
 	http.HandleFunc("/loh", authenticate(handlePlayer()))
-	port := "0.0.0.0:8080"
+	port := "0.0.0.0:7075"
 	fmt.Println("Starting server on port", port)
 
 	go allReady()

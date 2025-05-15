@@ -12,7 +12,7 @@ const (
 	GoodPlayer      = '@'
 	BadPlayer       = '&'
 	DropYummyTime   = 7
-	MaxPlayersCount = 5
+	MaxPlayersCount = 20
 	MainStageTime   = 100
 	PrepareStage    = 0
 	MainStage       = 1
