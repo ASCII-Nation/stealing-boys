@@ -2,12 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>stealing-boys</title>
+    <title>Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script> 
     <style>
         #response {
             white-space: pre-wrap;
             font-family: monospace;
+            margin-top: 20px;
         }
         #setup {
             margin-bottom: 10px;
@@ -27,31 +28,46 @@
         let userID = null;
 
         async function fetchData(key) {
-            if (!userID) return "here is no names!";
+    if (!userID) return "here is no names!";
 
-            try {
-                const response = await fetch('/loh', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                        'X-User-ID': userID
-                    },
-                    body: key
-                });
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status}`);
-                }
-                return await response.text();
-            } catch (error) {
-                console.error('Error data receiving: ', error);
-                return `Error: ${error.message}`;
-            }
+    try {
+        const response = await fetch('/loh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+                'X-User-ID': userID
+            },
+            body: key
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
         }
+
+        const compressed = await response.arrayBuffer();
+
+        // Проверяем, что данные можно распаковать
+        let decompressed;
+        try {
+            decompressed = pako.ungzip(new Uint8Array(compressed), { to: 'string' });
+        } catch (decompressError) {
+            console.error('Decompression failed:', decompressError);
+            throw new Error('Failed to decompress server response');
+        }
+
+        return decompressed;
+    } catch (error) {
+        // Обработка всех возможных типов ошибок
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('Error data receiving:', errorMessage);
+        return `Error: ${errorMessage}`;
+    }
+}
 
         async function updateResponse(key) {
             const responseDiv = document.getElementById('response');
             const data = await fetchData(key);
-            responseDiv.textContent = data;
+            responseDiv.textContent = data || "(empty response)";
         }
 
         document.addEventListener('keydown', (event) => {
