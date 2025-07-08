@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"net/http"
@@ -104,7 +102,7 @@ func deletePlayer() {
 func handlePlayer() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		// start := time.Now()
+		start := time.Now()
 		userID := r.Header.Get("X-User-ID")
 		playersMu.Lock()
 		p, exists := players[userID]
@@ -125,32 +123,32 @@ func handlePlayer() http.HandlerFunc {
 			outcome = render()
 		}
 		// w.Header().Set("Content-Type", "text/plain")
-		var buf bytes.Buffer
-		gz := gzip.NewWriter(&buf)
+		// var buf bytes.Buffer
+		// gz := gzip.NewWriter(&buf)
 
-		// Сжимаем текст
-		_, err = io.WriteString(gz, outcome)
-		if err != nil {
-			http.Error(w, "Failed to write compressed data", http.StatusInternalServerError)
-			return
-		}
-		gz.Close() // обязательно закрываем, чтобы все данные записались в буфер
+		// // Сжимаем текст
+		// _, err = io.WriteString(gz, outcome)
+		// if err != nil {
+		// 	http.Error(w, "Failed to write compressed data", http.StatusInternalServerError)
+		// 	return
+		// }
+		// gz.Close() // обязательно закрываем, чтобы все данные записались в буфер
 
 		// Устанавливаем заголовки
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/plain")
-		w.Header().Set("Content-Encoding", "gzip")
+		// w.Header().Set("Content-Encoding", "gzip")
 
 		// Отправляем сжатые данные
 
-		_, err = w.Write(buf.Bytes())
-		if err != nil {
-			http.Error(w, "Failed to write compressed data", http.StatusInternalServerError)
-			return
-		}
+		// _, err = w.Write(buf.Bytes())
+		// if err != nil {
+		// 	http.Error(w, "Failed to write compressed data", http.StatusInternalServerError)
+		// 	return
+		// }
 		// playersMu.Unlock()
-		// fmt.Fprint(w, outcome)
-		// fmt.Println(time.Since(start))
+		fmt.Fprint(w, outcome)
+		fmt.Println(time.Since(start))
 		// playersMu.Lock()
 	}
 

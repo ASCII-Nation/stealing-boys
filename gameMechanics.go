@@ -12,10 +12,11 @@ func allReady() {
 		time.Sleep(time.Second * 2)
 	}
 
-	for _, value := range players {
-		value.ready = false
-		world[convertToRealPosition(value.xPosition, value.yPosition)] = value.name
+	for _, player := range players {
+		player.ready = false
+		world[convertToRealPosition(player.xPosition, player.yPosition)] = player.name
 	}
+
 	readyCount = 0
 	currentStage = MainStage
 	go stageController()

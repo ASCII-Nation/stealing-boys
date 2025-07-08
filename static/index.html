@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script> 
     <style>
         #response {
             white-space: pre-wrap;
@@ -28,41 +27,31 @@
         let userID = null;
 
         async function fetchData(key) {
-    if (!userID) return "here is no names!";
+            if (!userID) return "No name entered!";
 
-    try {
-        const response = await fetch('/loh', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-                'X-User-ID': userID
-            },
-            body: key
-        });
+            try {
+                const response = await fetch('/loh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'X-User-ID': userID
+                    },
+                    body: key
+                });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                // Получаем простой текст от сервера
+                const text = await response.text();
+                return text;
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.error('Error receiving data:', errorMessage);
+                return `Error: ${errorMessage}`;
+            }
         }
-
-        const compressed = await response.arrayBuffer();
-
-        // Проверяем, что данные можно распаковать
-        let decompressed;
-        try {
-            decompressed = pako.ungzip(new Uint8Array(compressed), { to: 'string' });
-        } catch (decompressError) {
-            console.error('Decompression failed:', decompressError);
-            throw new Error('Failed to decompress server response');
-        }
-
-        return decompressed;
-    } catch (error) {
-        // Обработка всех возможных типов ошибок
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('Error data receiving:', errorMessage);
-        return `Error: ${errorMessage}`;
-    }
-}
 
         async function updateResponse(key) {
             const responseDiv = document.getElementById('response');
@@ -81,7 +70,7 @@
                 userID = value;
                 document.getElementById('setup').style.display = 'none';
                 updateResponse('');
-                setInterval(() => updateResponse(''), 20);
+                setInterval(() => updateResponse(''), 20); // каждые 20 мс
             } else {
                 alert("Enter correct name pls");
             }
